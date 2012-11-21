@@ -1,0 +1,34 @@
+# delete everything
+rm -fR ../a_compiled_out
+mkdir ../a_compiled_out
+mkdir ../a_compiled_out/kernel
+mkdir ../a_compiled_out/system
+mkdir ../a_compiled_out/system/lib
+mkdir ../a_compiled_out/system/lib/modules
+make clean
+
+# make
+make -j6
+
+# copy modules
+cp -f ./crypto/tcrypt.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/net/usb/raw_ip_net.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/usb/class/cdc-acm.ko ../a_compiled_out/system/lib/modules/
+cp -f ./arch/arm/mach-tegra/baseband-xmm-power2.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/net/wireless/bcmdhd_4334/bcmdhd.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/scsi/scsi_wait_scan.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/usb/serial/baseband_usb_chr.ko ../a_compiled_out/system/lib/modules/
+cp -f ./crypto/md4.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/cachefiles/cachefiles.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/cifs/cifs.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/fscache/fscache.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/lockd/lockd.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/nfs/nfs.ko ../a_compiled_out/system/lib/modules/
+cp -f ./net/sunrpc/sunrpc.ko ../a_compiled_out/system/lib/modules/
+
+# copy zImage
+cp -f ./arch/arm/boot/zImage ../a_compiled_out/kernel/
+
+# ready for further editing
+make clean
+
