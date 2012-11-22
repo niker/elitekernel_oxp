@@ -10,7 +10,8 @@
 # Normal rules
 #
 .*
-!.config
+!.config*
+.config.old
 *.o
 *.o.*
 *.a
@@ -33,6 +34,11 @@ modules.builtin
 *.lzo
 *.patch
 *.gcno
+
+/kernelinjector.oxp/bootimg.out/*
+/kernelinjector.oxp/bootimg.base/*.stock
+/kernelinjector.oxp/bootimg.base/*.old
+/kernelinjector.oxp/zImage.new/zImage
 
 #
 # Top-level generic files
