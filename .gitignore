@@ -39,6 +39,7 @@ modules.builtin
 /kernelinjector.oxp/bootimg.base/*.stock
 /kernelinjector.oxp/bootimg.base/*.old
 /kernelinjector.oxp/zImage.new/zImage
+/kernelinjector.oxp/structure.new/modules/*
 
 #
 # Top-level generic files

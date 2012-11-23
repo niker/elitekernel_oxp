@@ -1,30 +1,29 @@
 # delete everything
-rm -fR ../a_compiled_out
-mkdir ../a_compiled_out
-mkdir ../a_compiled_out/kernel
-mkdir ../a_compiled_out/system
-mkdir ../a_compiled_out/system/lib
-mkdir ../a_compiled_out/system/lib/modules
+rm -fR kernelinjector.oxp/structure.new/modules/*
+rm -f kernelinjector.oxp/zImage.new/zImage
+
 make clean
+
+cd kernelinjector.oxp
+sh extract
+cd ..
 
 # make
 make -j6
 
 # copy modules
-
-find . -type f -name '*.ko' -exec cp -f {} ../a_compiled_out/system/lib/modules \;
+find drivers -type f -name '*.ko' -exec cp -f {} kernelinjector.oxp/structure.new/modules \;
+find arch -type f -name '*.ko' -exec cp -f {} kernelinjector.oxp/structure.new/modules \;
 
 # copy zImage
-cp -f ./arch/arm/boot/zImage ../a_compiled_out/kernel/
+cp -f arch/arm/boot/zImage kernelinjector.oxp/zImage.new/zImage
+
+cd kernelinjector.oxp
+sh compile
+cd ..
+
+gzip kernelinjector.oxp/structure.new/modules/* kernelinjector.oxp/structure.new/modules/mods.tar.gz
 
 # ready for further editing
 make clean
-
-cp -f ../a_compiled_out/kernel/zImage ./kernelinjector.oxp/zImage.new/zImage
-rm -fR ./kernelinjector.oxp/structure.new/modules/*
-cp -fR ../a_compiled_out/system/lib/modules/* ./kernelinjector.oxp/structure.new/modules
-cd kernelinjector.oxp
-sh extract
-sh compile
-cd ..
 
