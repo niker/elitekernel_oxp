@@ -696,9 +696,10 @@ service L2PE /system/bin/l2_profile_exchange handset wlan1
 
 # Start tweaks core script for Android Revolution HD
 # for universal kernel compatibility
-service arhd-tweaks /system/bin/sh /system/etc/init.post_boot.sh
-    class main
-    user root
-    group root
-    oneshot
+#service arhd-tweaks /system/bin/sh /system/etc/init.post_boot.sh
+#    class main
+#    user root
+#    group root
+#    oneshot
     
+

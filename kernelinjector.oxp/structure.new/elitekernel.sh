@@ -12,3 +12,12 @@ mount -o remount,ro /system
 insmod /system/lib/modules/bcmdhd.ko
 
 
+# run tweaks in ROM
+/system/bin/sh /system/etc/init.post_boot.sh
+
+
+# run EliteKernel tweaks (overrides ROM tweaks)
+echo "sio" > /sys/block/mmcblk0/queue/scheduler
+echo "sio" > /sys/block/mmcblk1/queue/scheduler
+
+
