@@ -1,20 +1,6 @@
 #!/system/bin/sh
 
-# EliteKernel: deploy modules and misc files
-sync
-touch /data/local/em_modules_deployed
-mount -o remount,rw /system
-sync
-cp -fR /modules/*  /system/lib/modules
-sync
-mount -o remount,ro /system
-
-insmod /system/lib/modules/bcmdhd.ko
-
-
-# run tweaks in ROM
-#/system/bin/sh /system/etc/init.post_boot.sh
-
+sleep 65 # do the configuration again to override ROM and hardcoded tegra governor
 
 # run EliteKernel tweaks (overrides ROM tweaks)
 echo "sio" > /sys/block/mmcblk0/queue/scheduler
@@ -86,9 +72,6 @@ mount -o async,remount,noatime,nodiratime,delalloc,noauto_da_alloc,barrier=0,nob
 echo "2048" > /sys/block/mmcblk0/bdi/read_ahead_kb;
 echo "2048" > /sys/block/mmcblk0/queue/read_ahead_kb;
 
-# activate delayed config to override ROM
-/system/xbin/busybox nohup /system/bin/sh /elitekernel_delayed.sh 2>&1 >/dev/null &
-
-
+touch /data/local/em_delayed_tweaks
 
 

@@ -88,6 +88,8 @@ loglevel 3
     # EliteKernel: init
     chmod 0755 /elitekernel.sh
     chown root shell /elitekernel.sh
+    chmod 0755 /elitekernel_delayed.sh
+    chown root shell /elitekernel_delayed.sh
     service em_init /system/bin/sh /elitekernel.sh
 	class core
         user root
