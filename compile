@@ -22,7 +22,7 @@ cd kernelinjector.oxp
 sh compile
 cd ..
 
-gzip kernelinjector.oxp/structure.new/modules/* kernelinjector.oxp/structure.new/modules/mods.tar.gz
+#gzip kernelinjector.oxp/structure.new/modules/* kernelinjector.oxp/structure.new/modules/mods.tar.gz
 
 # ready for further editing
 make clean

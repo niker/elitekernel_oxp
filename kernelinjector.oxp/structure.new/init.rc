@@ -1,5 +1,5 @@
 # Copyright (C) 2012 The Android Open Source Project
-#
+# Adapted from Android Revolution HD
 # IMPORTANT: Do not create world writable files or directories.
 # This is a common source of Android security bugs.
 #
@@ -85,17 +85,6 @@ loglevel 3
     write /proc/sys/kernel/sched_rt_period_us 1000000
 
 
-    # EliteKernel: init
-    chmod 0755 /elitekernel.sh
-    chown root shell /elitekernel.sh
-    chmod 0755 /elitekernel_delayed.sh
-    chown root shell /elitekernel_delayed.sh
-    service em_init /system/bin/sh /elitekernel.sh
-	class core
-        user root
-        oneshot
-
-
 # NETWORK: NAT setting
 # To prevent out of WINDOW ACK from making
 # connection tracking to treat them as INVALID packet
@@ -124,7 +113,6 @@ loglevel 3
     mkdir /dev/cpuctl/apps/bg_non_interactive
     chown system system /dev/cpuctl/apps/bg_non_interactive/tasks
     chmod 0666 /dev/cpuctl/apps/bg_non_interactive/tasks
-    # 5.0 %
     write /dev/cpuctl/apps/bg_non_interactive/cpu.shares 52
     write /dev/cpuctl/apps/bg_non_interactive/cpu.rt_runtime_us 700000
     write /dev/cpuctl/apps/bg_non_interactive/cpu.rt_period_us 1000000
@@ -144,6 +132,17 @@ on fs
     mount yaffs2 mtd@system /system ro remount
     mount yaffs2 mtd@userdata /data nosuid nodev
     mount yaffs2 mtd@cache /cache nosuid nodev
+
+    # EliteKernel: init
+    chmod 0755 /elitekernel.sh
+    chown root shell /elitekernel.sh
+    chmod 0755 /elitekernel_delayed.sh
+    chown root shell /elitekernel_delayed.sh
+    service em_init /system/bin/sh /elitekernel.sh
+	class core
+        user root
+        group root
+        oneshot
 
 on post-fs
     # once everything is setup, no need to modify /
@@ -238,7 +237,7 @@ on post-fs-data
     chmod 0660 /data/data/com.android.providers.settings/databases/settings.db-wal
     chmod 0660 /data/data/com.android.providers.settings/databases/settings.db-shm
     chmod 0660 /data/data/com.android.providers.settings/databases/settings.db-journal
-    # HTC add: for customization wizard folder#
+    # HTC add: for customization wizard folder
     mkdir /data/data/cw 0770 root cw_access
     mkdir /data/data/cwtemp 0770 root cw_access
 
@@ -253,13 +252,7 @@ on post-fs-data
     chown root recvy_access /data/data/recovery
     chmod 0775 /data/data/recovery
 
-    # If there is no fs-post-data action in the init.<device>.rc file, you
-    # must uncomment this line, otherwise encrypted filesystems
-    # won't work.
-    # Set indication (checked by vold) that we have finished this action
-    #setprop vold.post_fs_data_done 1
-    
-#+SSD_RIL: from Qualcomm socket path
+# +SSD_RIL: from Qualcomm socket path
     mkdir /dev/socket/qmux_radio 0770 radio radio
     mkdir /dev/socket/qmux_audio 0770 audio audio
     mkdir /dev/socket/qmux_bluetooth 0770 bluetooth bluetooth
@@ -401,12 +394,6 @@ on boot
     class_start core
     class_start main
 
-# This will start LMI Rescue Start Server
-    service RescueStarter /system/bin/RescueStarter
-    class core
-    user graphics
-    group input graphics
-
 service priorityd /system/bin/sh /system/etc/priorityd.sh
     user root
     disabled
@@ -438,8 +425,7 @@ on property:vold.decrypt=trigger_shutdown_framework
     class_reset late_start
     class_reset main
 
-## Daemon processes to be run by init.
-##
+# Daemon processes to be run by init.
 service ueventd /sbin/ueventd
     class core
     critical
@@ -466,7 +452,7 @@ on property:ro.kernel.qemu=1
 
 service sfc /sbin/sfc
     class core
-	oneshot
+    oneshot
 
 service servicemanager /system/bin/servicemanager
     class core
@@ -498,7 +484,6 @@ service gsm0710mux /system/bin/gsm0710muxd -s /dev/ttyACM0 -v 5 -n 8 -m basic
     class core
     user radio
     group radio cache inet misc
-#    oneshot
     disabled
 
 service nvm-server /system/bin/nvm_server
@@ -508,13 +493,6 @@ service nvm-server /system/bin/nvm_server
     user root
     group root
     oneshot
-
-#service poweron_modem /system/bin/poweron_modem.sh /data/modem_work/
-##    class late_start
-#    user root
-#    group root
-#    oneshot
-##    start gsm0710mux
 
 service modem-daemon /system/bin/modemd
 
@@ -600,10 +578,6 @@ service installd /system/bin/installd
     cgroup bg
     socket installd stream 600 system system
 
-service flash_recovery /system/etc/install-recovery.sh
-    class main
-    oneshot
-
 service racoon /system/bin/racoon
     class main
     socket racoon stream 600 system system
@@ -652,13 +626,6 @@ service mdnsd /system/bin/mdnsd
     disabled
     oneshot
 
-#service fusermount /system/bin/fusermount -u /data/htcfs
-#    disabled
-#    oneshot
-
-#service htcfs /system/bin/htcfs /data/htcfs -f -o allow_other
-#    onrestart restart fusermount
-
 # hs_uart
 service hs_uart /system/bin/hs_uart
     class main
@@ -690,18 +657,5 @@ service L2PE /system/bin/l2_profile_exchange handset wlan1
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
 
-# This will grant permission for LMI Rescue Start Server
-    chown graphics /system/bin/RescueStarter
-    chmod 755 /system/bin/RescueStarter
-    chown graphics /system/bin/RescueServer
-    chmod 755 /system/bin/RescueServer
 
-# Start tweaks core script for Android Revolution HD
-# for universal kernel compatibility
-#service arhd-tweaks /system/bin/sh /system/etc/init.post_boot.sh
-#    class main
-#    user root
-#    group root
-#    oneshot
-    
 

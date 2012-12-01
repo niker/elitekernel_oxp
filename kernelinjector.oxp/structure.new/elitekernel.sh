@@ -5,12 +5,22 @@ sync
 touch /data/local/em_modules_deployed
 mount -o remount,rw /system
 sync
+rm -f /system/lib/modules/*
 cp -fR /modules/*  /system/lib/modules
 sync
-mount -o remount,ro /system
-
+chmod -R 0644 system/lib/modules
+chown 0:0 /system/lib/modules/bcmdhd.ko
+chown 0:0 /system/lib/modules/baseband_xmm_power2.ko
+chown 0:0 /system/lib/modules/raw_ip_net.ko
+chown 0:0 /system/lib/modules/baseband_usb_chr.ko
+chown 0:0 /system/lib/modules/cdc_acm.ko
 insmod /system/lib/modules/bcmdhd.ko
-
+insmod /system/lib/modules/baseband_xmm_power2.ko
+insmod /system/lib/modules/raw_ip_net.ko
+insmod /system/lib/modules/baseband_usb_chr.ko
+insmod /system/lib/modules/cdc_acm.ko
+sync
+mount -o remount,ro /system
 
 # run tweaks in ROM
 #/system/bin/sh /system/etc/init.post_boot.sh
@@ -27,9 +37,9 @@ echo "ondemand" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
 echo "ondemand" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
 
 # set default speeds
-echo "1400000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+echo "1300000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 echo "1600000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
-echo "1600000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
+echo "1500000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
 echo "204000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
