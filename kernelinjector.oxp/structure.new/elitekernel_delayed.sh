@@ -21,27 +21,27 @@ echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 echo "204000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
-echo "102000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
+echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
 # set governor prefs and lock
 echo "15" > /sys/devices/system/cpu/cpufreq/ondemand/down_differential
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/ignore_nice_load
 echo "3000000" > /sys/devices/system/cpu/cpufreq/ondemand/input_boost_duration
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy
-echo "3" > /sys/devices/system/cpu/cpufreq/ondemand/powersave_bias
-echo "2" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
-echo "30000" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate
-echo "10000" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate_min
+echo "5" > /sys/devices/system/cpu/cpufreq/ondemand/powersave_bias
+echo "5" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
+echo "22500" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate
+echo "7500" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate_min
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/touch_poke
 echo "204000" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_bottom_freq
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_dynamic
 echo "760000" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_freq
-echo "4" > /sys/devices/system/cpu/cpufreq/ondemand/ui_counter
+echo "3" > /sys/devices/system/cpu/cpufreq/ondemand/ui_counter
 echo "15000" > /sys/devices/system/cpu/cpufreq/ondemand/ui_sampling_rate
-echo "85" > /sys/devices/system/cpu/cpufreq/ondemand/ui_threshold
-echo "85" > /sys/devices/system/cpu/cpufreq/ondemand/ux_boost_threshold
-echo "910000" > /sys/devices/system/cpu/cpufreq/ondemand/ux_freq
-echo "8" > /sys/devices/system/cpu/cpufreq/ondemand/ux_loading
+echo "40" > /sys/devices/system/cpu/cpufreq/ondemand/ui_threshold
+echo "66" > /sys/devices/system/cpu/cpufreq/ondemand/ux_boost_threshold
+echo "760000" > /sys/devices/system/cpu/cpufreq/ondemand/ux_freq
+echo "8" > /sys/devices/system/cpu/cpufreq/ondemand/ux_loa
 
 # set vm tweaks
 sysctl -w vm.min_free_kbytes=5242
