@@ -73,8 +73,8 @@ static int mtp_qos;
 /* #ifdef CONFIG_PERFLOCK */
 static struct pm_qos_request_list mtp_req_freq;
 static struct pm_qos_request_list req_cpus;
-extern void release_screen_off_freq_lock(unsigned int capfreq );
-extern void lock_screen_off_freq_lock();
+//extern void release_screen_off_freq_lock(unsigned int capfreq );
+//extern void lock_screen_off_freq_lock();
 static int release_screen_off_flag;
 static struct work_struct mtp_perf_lock_on_work;
 /* #endif */
@@ -307,7 +307,7 @@ static void mtp_setup_perflock(struct work_struct *data)
 	if (dev->mtp_perf_lock_on) {
 		printk(KERN_INFO "[USB][MTP] %s, perf on\n", __func__);
 		if (release_screen_off_flag) {
-			release_screen_off_freq_lock(PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
+			//release_screen_off_freq_lock(PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
 			release_screen_off_flag = 0;
 		}
 		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
@@ -318,7 +318,7 @@ static void mtp_setup_perflock(struct work_struct *data)
 		pm_qos_update_request(&mtp_req_freq, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		pm_qos_update_request(&req_cpus, (s32)PM_QOS_MIN_ONLINE_CPUS_DEFAULT_VALUE);
 		if (!release_screen_off_flag) {
-			lock_screen_off_freq_lock();
+			//lock_screen_off_freq_lock();
 			release_screen_off_flag = 1;
 		}
 	}
