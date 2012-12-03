@@ -22,19 +22,15 @@ insmod /system/lib/modules/cdc_acm.ko
 sync
 mount -o remount,ro /system
 
-# run tweaks in ROM
-#/system/bin/sh /system/etc/init.post_boot.sh
-
-
 # run EliteKernel tweaks (overrides ROM tweaks)
 echo "sio" > /sys/block/mmcblk0/queue/scheduler
 echo "sio" > /sys/block/mmcblk1/queue/scheduler
 
 # set and lock governors
-echo "n3ocold" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-echo "n3ocold" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
-echo "n3ocold" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
-echo "n3ocold" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
 
 # set default speeds
 echo "1300000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
@@ -42,10 +38,10 @@ echo "1600000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 echo "1500000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
-echo "102000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+echo "204000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
-echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
+echo "102000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
 # set governor prefs
 echo "15" > /sys/devices/system/cpu/cpufreq/ondemand/down_differential
