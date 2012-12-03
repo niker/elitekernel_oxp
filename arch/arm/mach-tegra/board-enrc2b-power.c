@@ -56,6 +56,7 @@
 #endif
 #include <linux/tps80032_charger.h>
 #include <linux/tps80032_gauge.h>
+#include "tegra_pmqos.h"
 
 #define PMC_CTRL		0x0
 #define PMC_CTRL_INTR_LOW	(1 << 17)
@@ -565,6 +566,8 @@ static int __init enrc2b_fixed_regulator_init(void)
 	}
 	return platform_add_devices(fixed_regs_devices, nfixreg_devs);
 }
+
+//static unsigned int tegra_pmqos_boost_freq = 204000;
 
 static int __init enrc2b_gpio_regulator_init(void)
 {

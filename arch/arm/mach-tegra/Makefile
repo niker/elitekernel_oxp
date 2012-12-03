@@ -86,6 +86,9 @@ obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += cpuquiet.o
 else
 obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += cpu-tegra3.o
 endif
+ifeq ($(CONFIG_TEGRA_MPDECISION),y)
+obj-$(CONFIG_ARCH_TEGRA_3x_SOC)         += tegra_mpdecision.o
+endif
 endif
 obj-$(CONFIG_TEGRA_PCI)                 += pcie.o
 obj-$(CONFIG_USB_SUPPORT)               += usb_phy.o
@@ -309,6 +312,7 @@ obj-${CONFIG_HTC_BATT_CORE}             += htc_battery_core.o
 obj-$(CONFIG_BATTERY_TPS80032)          += htc_battery_tps80032.o
 obj-y					+= htc_perf.o
 obj-${CONFIG_MEMORY_FOOTPRINT_DEBUGGING}+= mfootprint.o
+obj-y                                   += tegra_rq_stats.o
 
 # sophia: add mdm driver
 ifdef CONFIG_QCT_9K_MODEM

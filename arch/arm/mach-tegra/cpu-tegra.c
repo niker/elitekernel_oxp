@@ -41,6 +41,7 @@
 
 #include <asm/system.h>
 
+//#include <mach/hardware.h>
 #include <mach/clk.h>
 #include <mach/edp.h>
 #include <mach/mfootprint.h>
@@ -49,12 +50,18 @@
 #include "cpu-tegra.h"
 #include "dvfs.h"
 #include "pm.h"
+#include "tegra_pmqos.h"
 
 extern unsigned int get_powersave_freq();
 /* Symbol to store resume resume */
 extern unsigned long long wake_reason_resume;
 static spinlock_t user_cap_lock;
 struct work_struct htc_suspend_resume_work;
+
+#ifdef CONFIG_TEGRA_MPDECISION
+/* mpdecision notifier */
+extern int mpdecision_gmode_notifier(void);
+#endif
 
 /* tegra throttling and edp governors require frequencies in the table
    to be in ascending order */
@@ -539,6 +546,7 @@ int tegra_update_cpu_speed(unsigned long rate)
 	int ret = 0;
 	struct cpufreq_freqs freqs;
 
+int status = 1;
 	unsigned long rate_save = rate;
 	int orig_nice = 0;
 	freqs.old = tegra_getspeed(0);
@@ -566,12 +574,23 @@ int tegra_update_cpu_speed(unsigned long rate)
 
 			/* set rate to max of LP mode */
 			ret = clk_set_rate(cpu_clk, 475000 * 1000);
+#ifndef CONFIG_TEGRA_MPDECISION
 
                         MF_DEBUG("00UP0039");
 			/* change to g mode */
 			clk_set_parent(cpu_clk, cpu_g_clk);
 
                         MF_DEBUG("00UP0040");
+#else
+                        /*
+                         * the above variant is now no longer preferred since
+                         * mpdecision would not know about this. Notify mpdecision
+                         * instead to switch to G mode
+                         */
+                        status = mpdecision_gmode_notifier();
+                        if (status == 0)
+                                pr_err("%s: couldn't switch to gmode (freq)", __func__ );
+#endif
 			/* restore the target frequency, and
 			 * let the rest of the function handle
 			 * the frequency scale up

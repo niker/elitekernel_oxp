@@ -21,6 +21,7 @@
 #include <linux/sched.h>
 #include <linux/module.h>
 #include <asm/irq_regs.h>
+#include <linux/rq_stats.h>
 
 #include "tick-internal.h"
 

@@ -135,6 +135,10 @@ config CPU_FREQ_DEFAULT_GOV_LULZACTIVE
 	help
 	  Use the CPUFreq governor 'lulzactive' as default.
 
+config CPU_FREQ_DEFAULT_GOV_N3OCOLD
+	bool "n3ocold"
+	select CPU_FREQ_GOV_N3OCOLD
+
 config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
 	bool "pegasusq"
 	select CPU_FREQ_GOV_PEGASUSQ
@@ -254,6 +258,9 @@ config CPU_FREQ_GOV_LULZACTIVE
 	  'lulzactive' - a new interactive governor by Tegrak!
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_N3OCOLD
+	tristate "'n3ocold' cpufreq policy governor"
 
 config CPU_FREQ_GOV_PEGASUSQ
 	tristate "'pegasusq' cpufreq policy governor"
