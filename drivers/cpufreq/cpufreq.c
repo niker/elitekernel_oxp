@@ -33,7 +33,6 @@
 
 #include <trace/events/power.h>
 
-#include "../arch/arm/mach-tegra/tegra_pmqos.h"
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low
  * level driver of CPUFreq support, and its spinlock. This lock
@@ -179,11 +178,9 @@ void cpufreq_cpu_put(struct cpufreq_policy *data)
 EXPORT_SYMBOL_GPL(cpufreq_cpu_put);
 
 
-#ifndef CONFIG_CPU_FREQ_DEBUG
-static inline void cpufreq_debug_enable_ratelimit(void) { return; }
-static inline void cpufreq_debug_disable_ratelimit(void) { return; }
-#endif 
-
+/*********************************************************************
+ *            EXTERNALLY AFFECTING FREQUENCY CHANGES                 *
+ *********************************************************************/
 
 /**
  * adjust_jiffies - adjust the system "loops_per_jiffy"
@@ -345,21 +342,14 @@ static int cpufreq_parse_governor(char *str_governor, unsigned int *policy,
 		t = __find_governor(str_governor);
 
 		if (t == NULL) {
-			char *name = kasprintf(GFP_KERNEL, "cpufreq_%s",
-								str_governor);
+			int ret;
 
-			if (name) {
-				int ret;
+			mutex_unlock(&cpufreq_governor_mutex);
+			ret = request_module("cpufreq_%s", str_governor);
+			mutex_lock(&cpufreq_governor_mutex);
 
-				mutex_unlock(&cpufreq_governor_mutex);
-				ret = request_module("%s", name);
-				mutex_lock(&cpufreq_governor_mutex);
-
-				if (ret == 0)
-					t = __find_governor(str_governor);
-			}
-
-			kfree(name);
+			if (ret == 0)
+				t = __find_governor(str_governor);
 		}
 
 		if (t != NULL) {
@@ -426,32 +416,7 @@ static ssize_t store_##file_name					\
 }
 
 store_one(scaling_min_freq, min);
-#ifndef CONFIG_TEGRA_MPDECISION
 store_one(scaling_max_freq, max);
-#else
-static ssize_t store_scaling_max_freq(struct cpufreq_policy *policy,
-                                      const char *buf, size_t count)
-{
-        unsigned int ret = -EINVAL;
-        struct cpufreq_policy new_policy;
-
-        ret = cpufreq_get_policy(&new_policy, policy->cpu);
-        if (ret)
-                return -EINVAL;
-
-        ret = sscanf(buf, "%u", &new_policy.max);
-        if (ret != 1)
-                return -EINVAL;
-        if (new_policy.max <= 475000)
-                return -EINVAL;
-        tegra_pmqos_boost_freq = new_policy.max;
-
-        ret = __cpufreq_set_policy(policy, &new_policy);
-        policy->user_policy.max = new_policy.max;
-
-        return ret ? ret : count;
-}
-#endif
 
 /**
  * show_cpuinfo_cur_freq - current CPU frequency as detected by hardware
@@ -626,222 +591,6 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
 	return sprintf(buf, "%u\n", policy->cpuinfo.max_freq);
 }
 
-#ifdef CONFIG_VOLTAGE_CONTROL
-/*
- * Tegra3 voltage control via cpufreq by Paul Reioux (faux123)
- * inspired by Michael Huang's voltage control code for OMAP44xx
- */
-
-#include "../../arch/arm/mach-tegra/dvfs.h"
-#include "../../arch/arm/mach-tegra/clock.h"
-
-extern int user_mv_table[MAX_DVFS_FREQS];
-extern int avp_millivolts[MAX_DVFS_FREQS];
-extern int lp_cpu_millivolts[MAX_DVFS_FREQS];
-extern int emc_millivolts[MAX_DVFS_FREQS];
-
-static ssize_t show_UV_mV_table(struct cpufreq_policy *policy, char *buf)
-{
-	int i = 0;
-	char *out = buf;
-	struct clk *cpu_clk_g = tegra_get_clock_by_name("cpu_g");
-
-	/* find how many actual entries there are */
-	i = cpu_clk_g->dvfs->num_freqs;
-
-	for(i--; i >=0; i--) {
-		out += sprintf(out, "%lumhz: %i mV\n",
-				cpu_clk_g->dvfs->freqs[i]/1000000,
-				cpu_clk_g->dvfs->millivolts[i]);
-	}
-
-	return out - buf;
-}
-
-static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_t count)
-{
-	int i = 0;
-	unsigned long volt_cur;
-	int ret;
-	char size_cur[16];
-
-	struct clk *cpu_clk_g = tegra_get_clock_by_name("cpu_g");
-
-	/* find how many actual entries there are */
-	i = cpu_clk_g->dvfs->num_freqs;
-
-	for(i--; i >= 0; i--) {
-
-		if(cpu_clk_g->dvfs->freqs[i]/1000000 != 0) {
-			ret = sscanf(buf, "%lu", &volt_cur);
-			if (ret != 1)
-				return -EINVAL;
-
-			/* TODO: need some robustness checks */
-			user_mv_table[i] = volt_cur;
-			pr_info("cpu g mv tbl[%i]: %lu\n", i, volt_cur);
-
-			/* Non-standard sysfs interface: advance buf */
-			ret = sscanf(buf, "%s", size_cur);
-			buf += (strlen(size_cur)+1);
-		}
-	}
-	/* update dvfs table here */
-	cpu_clk_g->dvfs->millivolts = user_mv_table;
-
-	return count;
-}
-
-static ssize_t show_lp_UV_mV_table(struct cpufreq_policy *policy, char *buf)
-{
-	int i = 0;
-	char *out = buf;
-	struct clk *cpu_clk_lp = tegra_get_clock_by_name("cpu_lp");
-
-	/* find how many actual entries there are */
-	i = cpu_clk_lp->dvfs->num_freqs;
-
-	for(i--; i >=0; i--) {
-		out += sprintf(out, "%lumhz: %i mV\n",
-				cpu_clk_lp->dvfs->freqs[i]/1000000,
-				cpu_clk_lp->dvfs->millivolts[i]);
-	}
-
-	return out - buf;
-}
-
-static ssize_t store_lp_UV_mV_table(struct cpufreq_policy *policy, const char *buf, size_t count)
-{
-	int i = 0;
-	unsigned long volt_cur;
-	int ret;
-	char size_cur[16];
-
-	struct clk *cpu_clk_lp = tegra_get_clock_by_name("cpu_lp");
-
-	/* find how many actual entries there are */
-	i = cpu_clk_lp->dvfs->num_freqs;
-
-	for(i--; i >= 0; i--) {
-
-		if(cpu_clk_lp->dvfs->freqs[i]/1000000 != 0) {
-			ret = sscanf(buf, "%lu", &volt_cur);
-			if (ret != 1)
-				return -EINVAL;
-
-			/* TODO: need some robustness checks */
-			lp_cpu_millivolts[i] = volt_cur;
-			pr_info("cpu lp mv tbl[%i]: %lu\n", i, volt_cur);
-
-			/* Non-standard sysfs interface: advance buf */
-			ret = sscanf(buf, "%s", size_cur);
-			buf += (strlen(size_cur)+1);
-		}
-	}
-
-	return count;
-}
-
-static ssize_t show_emc_UV_mV_table(struct cpufreq_policy *policy, char *buf)
-{
-	int i = 0;
-	char *out = buf;
-	struct clk *clk_emc = tegra_get_clock_by_name("emc");
-
-	/* find how many actual entries there are */
-	i = clk_emc->dvfs->num_freqs;
-
-	for(i--; i >=0; i--) {
-		out += sprintf(out, "%lumhz: %i mV\n",
-				clk_emc->dvfs->freqs[i]/1000000,
-				clk_emc->dvfs->millivolts[i]);
-	}
-
-	return out - buf;
-}
-
-static ssize_t store_emc_UV_mV_table(struct cpufreq_policy *policy, const char *buf, size_t count)
-{
-	int i = 0;
-	unsigned long volt_cur;
-	int ret;
-	char size_cur[16];
-
-	struct clk *clk_emc = tegra_get_clock_by_name("emc");
-
-	/* find how many actual entries there are */
-	i = clk_emc->dvfs->num_freqs;
-
-	for(i--; i >= 0; i--) {
-
-		if(clk_emc->dvfs->freqs[i]/1000000 != 0) {
-			ret = sscanf(buf, "%lu", &volt_cur);
-			if (ret != 1)
-				return -EINVAL;
-
-			/* TODO: need some robustness checks */
-			emc_millivolts[i] = volt_cur;
-			pr_info("emc mv tbl[%i]: %lu\n", i, volt_cur);
-
-			/* Non-standard sysfs interface: advance buf */
-			ret = sscanf(buf, "%s", size_cur);
-			buf += (strlen(size_cur)+1);
-		}
-	}
-
-	return count;
-}
-
-static ssize_t show_avp_UV_mV_table(struct cpufreq_policy *policy, char *buf)
-{
-	int i = 0;
-	char *out = buf;
-	struct clk *avp_clk = tegra_get_clock_by_name("3d");
-
-	/* find how many actual entries there are */
-	i = avp_clk->dvfs->num_freqs;
-
-	for(i--; i >=0; i--) {
-		out += sprintf(out, "%lumhz: %i mV\n",
-				avp_clk->dvfs->freqs[i]/1000000,
-				avp_clk->dvfs->millivolts[i]);
-	}
-
-	return out - buf;
-}
-
-static ssize_t store_avp_UV_mV_table(struct cpufreq_policy *policy, const char *buf, size_t count)
-{
-	int i = 0;
-	unsigned long volt_cur;
-	int ret;
-	char size_cur[16];
-
-	struct clk *avp_clk = tegra_get_clock_by_name("3d");
-
-	/* find how many actual entries there are */
-	i = avp_clk->dvfs->num_freqs;
-
-	for(i--; i >= 0; i--) {
-
-		if(avp_clk->dvfs->freqs[i]/1000000 != 0) {
-			ret = sscanf(buf, "%lu", &volt_cur);
-			if (ret != 1)
-				return -EINVAL;
-
-			/* TODO: need some robustness checks */
-			avp_millivolts[i] = volt_cur;
-			pr_info("avp mv tbl[%i]: %lu\n", i, volt_cur);
-
-			/* Non-standard sysfs interface: advance buf */
-			ret = sscanf(buf, "%s", size_cur);
-			buf += (strlen(size_cur)+1);
-		}
-	}
-
-	return count;
-}
-#endif
 cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
 cpufreq_freq_attr_ro(cpuinfo_min_freq);
 cpufreq_freq_attr_ro(cpuinfo_max_freq);
@@ -858,13 +607,6 @@ cpufreq_freq_attr_rw(scaling_governor);
 cpufreq_freq_attr_rw(scaling_setspeed);
 cpufreq_freq_attr_ro(policy_min_freq);
 cpufreq_freq_attr_ro(policy_max_freq);
-#ifdef CONFIG_VOLTAGE_CONTROL
-cpufreq_freq_attr_rw(UV_mV_table);
-cpufreq_freq_attr_rw(lp_UV_mV_table);
-cpufreq_freq_attr_rw(emc_UV_mV_table);
-cpufreq_freq_attr_rw(avp_UV_mV_table);
-#endif
-
 
 static struct attribute *default_attrs[] = {
 	&cpuinfo_min_freq.attr,
@@ -880,12 +622,6 @@ static struct attribute *default_attrs[] = {
 	&scaling_setspeed.attr,
 	&policy_min_freq.attr,
 	&policy_max_freq.attr,
-#ifdef CONFIG_VOLTAGE_CONTROL
-	&UV_mV_table.attr,
-	&lp_UV_mV_table.attr,
-	&emc_UV_mV_table.attr,
-	&avp_UV_mV_table.attr,
-#endif
 	NULL
 };
 
@@ -1171,7 +907,6 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	if (cpu_is_offline(cpu))
 		return 0;
 
-	cpufreq_debug_disable_ratelimit();
 	pr_debug("adding CPU %u\n", cpu);
 
 #ifdef CONFIG_SMP
@@ -1180,7 +915,6 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	policy = cpufreq_cpu_get(cpu);
 	if (unlikely(policy)) {
 		cpufreq_cpu_put(policy);
-		cpufreq_debug_enable_ratelimit();
 		return 0;
 	}
 #endif
@@ -1258,7 +992,6 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	kobject_uevent(&policy->kobj, KOBJ_ADD);
 	module_put(cpufreq_driver->owner);
 	pr_debug("initialization complete\n");
-	cpufreq_debug_enable_ratelimit();
 
 	return 0;
 
@@ -1282,7 +1015,6 @@ err_free_policy:
 nomem_out:
 	module_put(cpufreq_driver->owner);
 module_out:
-	cpufreq_debug_enable_ratelimit();
 	return ret;
 }
 
@@ -1306,7 +1038,6 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 	unsigned int j;
 #endif
 
-	cpufreq_debug_disable_ratelimit();
 	pr_debug("unregistering CPU %u\n", cpu);
 
 	spin_lock_irqsave(&cpufreq_driver_lock, flags);
@@ -1314,7 +1045,6 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 
 	if (!data) {
 		spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
-		cpufreq_debug_enable_ratelimit();
 		unlock_policy_rwsem_write(cpu);
 		return -EINVAL;
 	}
@@ -1331,7 +1061,6 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 		spin_unlock_irqrestore(&cpufreq_driver_lock, flags);
 		kobj = &sys_dev->kobj;
 		cpufreq_cpu_put(data);
-		cpufreq_debug_enable_ratelimit();
 		unlock_policy_rwsem_write(cpu);
 		sysfs_remove_link(kobj, "cpufreq");
 		return 0;
@@ -1401,8 +1130,6 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 	if (cpufreq_driver->exit)
 		cpufreq_driver->exit(data);
 	unlock_policy_rwsem_write(cpu);
-
-	cpufreq_debug_enable_ratelimit();
 
 #ifdef CONFIG_HOTPLUG_CPU
 	/* when the CPU which is the parent of the kobj is hotplugged
@@ -1932,17 +1659,11 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 	unsigned int pmin = policy->min;
 	unsigned int pmax = policy->max;
 
-	/*qmin = min((unsigned int)pm_qos_request(PM_QOS_CPU_FREQ_MIN),
-		   data->user_policy.max);
-	qmax = max((unsigned int)pm_qos_request(PM_QOS_CPU_FREQ_MAX),
-		   data->user_policy.min);*/
- /* TODO: experimental */
 	qmin = min((unsigned int)pm_qos_request(PM_QOS_CPU_FREQ_MIN),
-		   data->user_policy.min);
-	qmax = max((unsigned int)pm_qos_request(PM_QOS_CPU_FREQ_MAX),
 		   data->user_policy.max);
+	qmax = max((unsigned int)pm_qos_request(PM_QOS_CPU_FREQ_MAX),
+		   data->user_policy.min);
 
-	cpufreq_debug_disable_ratelimit();
 	pr_debug("setting new policy for CPU %u: %u - %u (%u - %u) kHz\n",
 		policy->cpu, pmin, pmax, qmin, qmax);
 
@@ -2040,7 +1761,6 @@ error_out:
 	/* restore the limits that the policy requested */
 	policy->min = pmin;
 	policy->max = pmax;
-	cpufreq_debug_enable_ratelimit();
 	return ret;
 }
 
@@ -2244,7 +1964,6 @@ int cpufreq_register_driver(struct cpufreq_driver *driver_data)
 
 	register_hotcpu_notifier(&cpufreq_cpu_notifier);
 	pr_debug("driver %s up and running\n", driver_data->name);
-	cpufreq_debug_enable_ratelimit();
 
 	return 0;
 err_sysdev_unreg:
@@ -2271,12 +1990,8 @@ int cpufreq_unregister_driver(struct cpufreq_driver *driver)
 {
 	unsigned long flags;
 
-	cpufreq_debug_disable_ratelimit();
-
-	if (!cpufreq_driver || (driver != cpufreq_driver)) {
-		cpufreq_debug_enable_ratelimit();
+	if (!cpufreq_driver || (driver != cpufreq_driver))
 		return -EINVAL;
-	}
 
 	pr_debug("unregistering driver %s\n", driver->name);
 
