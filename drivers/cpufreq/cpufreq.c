@@ -33,7 +33,7 @@
 
 #include <trace/events/power.h>
 
-#include "../../arch/arm/mach-tegra/tegra_pmqos.h"
+#include "../arch/arm/mach-tegra/tegra_pmqos.h"
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low
  * level driver of CPUFreq support, and its spinlock. This lock
@@ -444,7 +444,7 @@ static ssize_t store_scaling_max_freq(struct cpufreq_policy *policy,
                 return -EINVAL;
         if (new_policy.max <= 475000)
                 return -EINVAL;
-        //tegra_pmqos_boost_freq = new_policy.max;
+        tegra_pmqos_boost_freq = new_policy.max;
 
         ret = __cpufreq_set_policy(policy, &new_policy);
         policy->user_policy.max = new_policy.max;

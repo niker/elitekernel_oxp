@@ -31,10 +31,10 @@ echo "sio" > /sys/block/mmcblk0/queue/scheduler
 echo "sio" > /sys/block/mmcblk1/queue/scheduler
 
 # set and lock governors
-echo "n3ocold" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-echo "n3ocold" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
-echo "n3ocold" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
-echo "n3ocold" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
 
 # set default speeds
 echo "1300000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
@@ -42,26 +42,26 @@ echo "1600000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 echo "1500000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
-echo "102000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+echo "204000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
-# set governor prefs
+# set governor prefs and lock
 echo "15" > /sys/devices/system/cpu/cpufreq/ondemand/down_differential
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/ignore_nice_load
 echo "3000000" > /sys/devices/system/cpu/cpufreq/ondemand/input_boost_duration
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy
 echo "5" > /sys/devices/system/cpu/cpufreq/ondemand/powersave_bias
 echo "5" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
-echo "30000" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate
-echo "10000" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate_min
+echo "22500" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate
+echo "7500" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate_min
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/touch_poke
 echo "204000" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_bottom_freq
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_dynamic
 echo "760000" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_freq
 echo "3" > /sys/devices/system/cpu/cpufreq/ondemand/ui_counter
-echo "20000" > /sys/devices/system/cpu/cpufreq/ondemand/ui_sampling_rate
+echo "15000" > /sys/devices/system/cpu/cpufreq/ondemand/ui_sampling_rate
 echo "40" > /sys/devices/system/cpu/cpufreq/ondemand/ui_threshold
 echo "66" > /sys/devices/system/cpu/cpufreq/ondemand/ux_boost_threshold
 echo "760000" > /sys/devices/system/cpu/cpufreq/ondemand/ux_freq
