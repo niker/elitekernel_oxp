@@ -34,7 +34,7 @@ static struct kobj_attribute attrbute##_attr = {	\
 }
 
 #define DEF_TARGET_FREQ (760000)
-#define DEF_POKE_FREQ (1300000)
+#define DEF_POKE_FREQ (1150000)
 #define DEF_POKE_MS (100)
 #define DEF_IDLE_MS (300)
 
