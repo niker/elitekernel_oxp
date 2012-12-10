@@ -2,26 +2,29 @@
 
 sleep 60 # do the configuration again to override ROM and hardcoded tegra governor
 
-# run EliteKernel tweaks (overrides ROM tweaks)
-echo "sio" > /sys/block/mmcblk0/queue/scheduler
-echo "sio" > /sys/block/mmcblk1/queue/scheduler
+# need to enable all CPU cores in order to set them up
+echo 4 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
-# set and lock governors
-#echo "n3ocold" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-#echo "n3ocold" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
-#echo "n3ocold" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
-#echo "n3ocold" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
+# set governors
+echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
 
-# set default speeds
-echo "1500000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-echo "1500000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+# set default speeds (cpus activate in order 0-3-2-1)
+echo "1300000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+echo "1600000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 echo "1500000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
-echo "1500000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
 echo "51000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
+
+sync
+# reset core activation to default
+echo 0 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
 # set governor prefs
 echo "15" > /sys/devices/system/cpu/cpufreq/ondemand/down_differential
@@ -62,15 +65,6 @@ sysctl -w kernel.panic=10
 # minfree
 echo "0,1,2,5,7,15" > /sys/module/lowmemorykiller/parameters/adj
 echo "1536,3072,6144,11264,16384,20480" > /sys/module/lowmemorykiller/parameters/minfree
-
-
-#I/O tweaks
-mount -o async,remount,noatime,nodiratime,delalloc,noauto_da_alloc,barrier=0,nobh /cache /cache
-mount -o async,remount,noatime,nodiratime,delalloc,noauto_da_alloc,barrier=0,nobh /data /data
-mount -o async,remount,noatime,nodiratime,delalloc,noauto_da_alloc,barrier=0,nobh /sd-ext /sd-ext
-mount -o async,remount,noatime,nodiratime,delalloc,noauto_da_alloc,barrier=0,nobh /devlog /devlog
-echo "2048" > /sys/block/mmcblk0/bdi/read_ahead_kb;
-echo "2048" > /sys/block/mmcblk0/queue/read_ahead_kb;
 
 touch /data/local/em_delayed_tweaks
 

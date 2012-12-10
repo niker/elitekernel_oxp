@@ -22,32 +22,35 @@ insmod /system/lib/modules/cdc_acm.ko
 sync
 mount -o remount,ro /system
 
-# run tweaks in ROM
-#/system/bin/sh /system/etc/init.post_boot.sh
-
-
 # run EliteKernel tweaks (overrides ROM tweaks)
 echo "sio" > /sys/block/mmcblk0/queue/scheduler
 echo "sio" > /sys/block/mmcblk1/queue/scheduler
 
-# set and lock governors
-#echo "n3ocold" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-#echo "n3ocold" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
-#echo "n3ocold" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
-#echo "n3ocold" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
+# need to enable all CPU cores in order to set them up
+echo 4 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
-# set default speeds
-echo "1500000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-echo "1500000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+# set governors
+echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
+echo "ondemand" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
+
+# set default speeds (cpus activate in order 0-3-2-1)
+echo "1300000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+echo "1600000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 echo "1500000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
-echo "1500000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
 echo "51000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
-# set governor prefs
+sync
+# reset core activation to default
+echo 0 > /sys/power/pnpmgr/hotplug/min_on_cpus
+
+# set ondemand prefs
 echo "15" > /sys/devices/system/cpu/cpufreq/ondemand/down_differential
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/ignore_nice_load
 echo "3000000" > /sys/devices/system/cpu/cpufreq/ondemand/input_boost_duration
@@ -98,7 +101,6 @@ echo "2048" > /sys/block/mmcblk0/queue/read_ahead_kb;
 
 # activate delayed config to override ROM
 /system/xbin/busybox nohup /system/bin/sh /elitekernel_delayed.sh 2>&1 >/dev/null &
-
 
 
 
