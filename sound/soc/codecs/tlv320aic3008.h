@@ -24,6 +24,9 @@
 #define AIC3008_MAX_REGS         128
 #define AIC3008_MAX_RETRY        10
 
+extern unsigned int elitekernel_audio_perflock;
+extern struct pm_qos_request_list aud_cpu_minfreq_req;
+
 /* control operations structure */
 struct aic3008_ctl_ops {
 	void (*tx_amp_enable)(int en);

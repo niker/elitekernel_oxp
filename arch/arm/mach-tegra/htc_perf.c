@@ -23,6 +23,9 @@
 #include "cpu-tegra.h"
 #include "fuse.h"
 
+#include "../sound/soc/codecs/tlv320aic3008.h"
+
+
 #define htc_perf_attr(attrbute) 				\
 static struct kobj_attribute attrbute##_attr = {	\
 	.attr	= {					\
@@ -206,6 +209,10 @@ static ssize_t power_save_store(struct kobject *kobj,
 					(s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
 			is_in_power_save = 0;
 			elitekernel_extreme_powersaving = 0;
+			if(elitekernel_audio_perflock == 1)
+			{
+				pm_qos_update_request(&aud_cpu_minfreq_req, (s32)(102000));
+			}
 		}
 		break;
 
@@ -217,6 +224,10 @@ static ssize_t power_save_store(struct kobject *kobj,
 			pm_qos_update_request(&cap_cpu_req, (s32)powersave_freq);
 			is_in_power_save = 1;
 			elitekernel_extreme_powersaving = 1;
+			if(elitekernel_audio_perflock == 1)
+			{
+				pm_qos_update_request(&aud_cpu_minfreq_req, (s32)(51000));
+			}
 		}
 		break;
 	case 't':
@@ -225,7 +236,6 @@ static ssize_t power_save_store(struct kobject *kobj,
 			pr_info("[htc_perf] set policy cap");
 			pm_qos_update_request(&cap_cpu_req, (s32)640000);
 			is_power_save_policy = 1;
-			//elitekernel_extreme_powersaving = 0;
 		}
 		break;
 	default:

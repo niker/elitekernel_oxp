@@ -62,7 +62,7 @@
 
 #define AUD_CPU_FREQ_MIN 102000
 
-//unsigned int elitekernel_extreme_powersaving;
+unsigned int elitekernel_audio_perflock = 0;
 
 /* for quattro --- */
 int64_t pwr_up_time;
@@ -81,7 +81,8 @@ static int aic3008_rx_mode;
 static int aic3008_tx_mode;
 static int aic3008_dsp_mode;
 static bool first_boot_path = false;
-static struct pm_qos_request_list aud_cpu_minfreq_req;
+//static 
+struct pm_qos_request_list aud_cpu_minfreq_req;
 
 struct aic3008_power *aic3008_power_ctl;
 
@@ -441,13 +442,15 @@ void aic3008_votecpuminfreq(bool bflag)
 
     if (bflag)
     {
-        pm_qos_update_request(&aud_cpu_minfreq_req, (s32)elitekernel_extreme_powersaving);
-        AUD_INFO("VoteMinFreqS:%d", elitekernel_extreme_powersaving);
+        pm_qos_update_request(&aud_cpu_minfreq_req, (s32)target_cpu_freq);
+        AUD_INFO("VoteMinFreqS:%d", target_cpu_freq);
+		elitekernel_audio_perflock = 1;
     }
     else
     {
         pm_qos_update_request(&aud_cpu_minfreq_req, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
         AUD_INFO("VoteMinFreqE:%d", PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
+		elitekernel_audio_perflock = 0;
     }
 
     return;
@@ -1391,13 +1394,6 @@ static long aic3008_ioctl(struct file *file, unsigned int cmd,
 			break;
 		}
 		/* call aic3008_set_config() to issue SPI commands */
-
-		// elitekernel: invoke CPU mode change more often
-		if (aic3008_IsSoundPlayBack(i)) {
-			aic3008_votecpuminfreq(true);
-		} else {
-			aic3008_votecpuminfreq(false);
-		}
 
 		ret = aic3008_set_config(cmd, i, 1);
 		if (ret < 0) AUD_ERR("configure(%d) error %d\n", i, ret);
