@@ -43,6 +43,8 @@ static struct kobj_attribute attrbute##_attr = {	\
 #endif
 unsigned int powersave_freq = CONFIG_POWER_SAVE_FREQ;
 
+unsigned int elitekernel_extreme_powersaving = 0;
+
 #define FUSE_CPUIDDQ 0x118
 
 static char media_boost = 'N';
@@ -203,6 +205,7 @@ static ssize_t power_save_store(struct kobject *kobj,
 			pm_qos_update_request(&cap_cpu_req,
 					(s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
 			is_in_power_save = 0;
+			elitekernel_extreme_powersaving = 0;
 		}
 		break;
 
@@ -213,6 +216,7 @@ static ssize_t power_save_store(struct kobject *kobj,
 			/* enable user cap */
 			pm_qos_update_request(&cap_cpu_req, (s32)powersave_freq);
 			is_in_power_save = 1;
+			elitekernel_extreme_powersaving = 1;
 		}
 		break;
 	case 't':
@@ -221,6 +225,7 @@ static ssize_t power_save_store(struct kobject *kobj,
 			pr_info("[htc_perf] set policy cap");
 			pm_qos_update_request(&cap_cpu_req, (s32)640000);
 			is_power_save_policy = 1;
+			//elitekernel_extreme_powersaving = 0;
 		}
 		break;
 	default:

@@ -38,6 +38,8 @@
 #include <linux/spi-tegra.h>
 #include <linux/pm_qos_params.h>
 
+#include "../arch/arm/mach-tegra/htc_perf.h"
+
 #undef LOG_TAG
 #define LOG_TAG "AUD"
 
@@ -59,6 +61,8 @@
 #endif
 
 #define AUD_CPU_FREQ_MIN 102000
+
+//unsigned int elitekernel_extreme_powersaving;
 
 /* for quattro --- */
 int64_t pwr_up_time;
@@ -408,15 +412,37 @@ bool aic3008_IsSoundPlayBack(int idx)
 void aic3008_votecpuminfreq(bool bflag)
 {
     static bool boldCPUMinReq = false;
+
+    // Override AUD_CPU_FREQ_MIN
+    static int target_cpu_freq = 102000;
+    if (elitekernel_extreme_powersaving == 1)
+    {
+		if(target_cpu_freq != 51000)
+		{
+    		target_cpu_freq = 51000;
+			boldCPUMinReq = !bflag;
+		}
+    }
+	else
+	{
+		if(target_cpu_freq != 102000)
+		{
+    		target_cpu_freq = 102000;
+			boldCPUMinReq = !bflag;
+		}
+	}
+
+
     if (bflag == boldCPUMinReq)
     {
         return;
     }
     boldCPUMinReq = bflag;
+
     if (bflag)
     {
-        pm_qos_update_request(&aud_cpu_minfreq_req, (s32)AUD_CPU_FREQ_MIN);
-        AUD_INFO("VoteMinFreqS:%d", AUD_CPU_FREQ_MIN);
+        pm_qos_update_request(&aud_cpu_minfreq_req, (s32)elitekernel_extreme_powersaving);
+        AUD_INFO("VoteMinFreqS:%d", elitekernel_extreme_powersaving);
     }
     else
     {
@@ -1365,6 +1391,14 @@ static long aic3008_ioctl(struct file *file, unsigned int cmd,
 			break;
 		}
 		/* call aic3008_set_config() to issue SPI commands */
+
+		// elitekernel: invoke CPU mode change more often
+		if (aic3008_IsSoundPlayBack(i)) {
+			aic3008_votecpuminfreq(true);
+		} else {
+			aic3008_votecpuminfreq(false);
+		}
+
 		ret = aic3008_set_config(cmd, i, 1);
 		if (ret < 0) AUD_ERR("configure(%d) error %d\n", i, ret);
 		break;
