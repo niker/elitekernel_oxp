@@ -49,6 +49,7 @@
 #include "cpu-tegra.h"
 #include "dvfs.h"
 #include "pm.h"
+#include "htc_perf.h"
 
 extern unsigned int get_powersave_freq();
 /* Symbol to store resume resume */
@@ -2120,7 +2121,9 @@ struct early_suspend tegra_cpufreq_performance_early_suspender;
 static struct pm_qos_request_list boost_cpu_freq_req;
 static struct pm_qos_request_list cap_cpu_freq_req;
 #define BOOST_CPU_FREQ_MIN 102000
-#define CAP_CPU_FREQ_MAX 340000
+// replaced by extreme powersaving #define CAP_CPU_FREQ_MAX 340000
+#define CAP_CPU_FREQ_MAX_SLEEP 475000 // eliminate audio crackling at the expense of battery
+#define CAP_CPU_FREQ_MAX_POWERSAVE 340000 // for extreme powersaving, 204 is way too low
 #endif
 static int enter_early_suspend = 0;
 static int perf_early_suspend = 0;
@@ -2244,10 +2247,20 @@ static struct freq_attr *tegra_cpufreq_attr[] = {
 
 static int tegra_cpufreq_suspend(struct cpufreq_policy *policy)
 {
-	if (CAP_CPU_FREQ_TARGET != CAP_CPU_FREQ_MAX){
-		CAP_CPU_FREQ_TARGET = CAP_CPU_FREQ_MAX;
-		pm_qos_update_request(&cap_cpu_freq_req, (s32)CAP_CPU_FREQ_MAX);
-		pr_info("tegra_cpufreq_suspend: cap cpu freq to %d\n", CAP_CPU_FREQ_MAX);
+	int SLEEP_FREQ;
+	if(elitekernel_extreme_powersaving == 1)
+	{
+		SLEEP_FREQ = CAP_CPU_FREQ_MAX_POWERSAVE;
+	}
+	else
+	{
+		SLEEP_FREQ = CAP_CPU_FREQ_MAX_SLEEP;
+	}
+
+	if (CAP_CPU_FREQ_TARGET != SLEEP_FREQ){
+		CAP_CPU_FREQ_TARGET = SLEEP_FREQ;
+		pm_qos_update_request(&cap_cpu_freq_req, (s32)SLEEP_FREQ);
+		pr_info("tegra_cpufreq_suspend: cap cpu freq to %d\n", SLEEP_FREQ);
 	}
 
 	return 0;
@@ -2276,13 +2289,23 @@ static struct cpufreq_driver tegra_cpufreq_driver = {
 
 static void tegra_cpufreq_powersave_early_suspend(struct early_suspend *h)
 {
+	int SLEEP_FREQ;
+	if(elitekernel_extreme_powersaving == 1)
+	{
+		SLEEP_FREQ = CAP_CPU_FREQ_MAX_POWERSAVE;
+	}
+	else
+	{
+		SLEEP_FREQ = CAP_CPU_FREQ_MAX_SLEEP;
+	}
+
 	MF_DEBUG("00250000");
 	if(perf_early_suspend == 0){
 		pr_info("tegra_cpufreq_powersave_early_suspend: cap cpu freq to 475MHz\n");
 	MF_DEBUG("00250001");
-		pm_qos_update_request(&cap_cpu_freq_req, (s32)CAP_CPU_FREQ_MAX);
+		pm_qos_update_request(&cap_cpu_freq_req, (s32)SLEEP_FREQ);
 	MF_DEBUG("00250002");
-		CAP_CPU_FREQ_TARGET = CAP_CPU_FREQ_MAX;
+		CAP_CPU_FREQ_TARGET = SLEEP_FREQ;
 	}
 
 	enter_early_suspend = 1;
@@ -2374,10 +2397,20 @@ EXPORT_SYMBOL_GPL(release_screen_off_freq_lock);
 
 void lock_screen_off_freq_lock()
 {
+	int SLEEP_FREQ;
+	if(elitekernel_extreme_powersaving == 1)
+	{
+		SLEEP_FREQ = CAP_CPU_FREQ_MAX_POWERSAVE;
+	}
+	else
+	{
+		SLEEP_FREQ = CAP_CPU_FREQ_MAX_SLEEP;
+	}
+
     if (enter_early_suspend){
 //        perf_early_suspend = 0 ;
-        CAP_CPU_FREQ_TARGET = CAP_CPU_FREQ_MAX;
-        pm_qos_update_request(&cap_cpu_freq_req, (s32)CAP_CPU_FREQ_MAX);
+        CAP_CPU_FREQ_TARGET = SLEEP_FREQ;
+        pm_qos_update_request(&cap_cpu_freq_req, (s32)SLEEP_FREQ);
         pr_info("lock early suspend CPU cap\n");
     }
 }

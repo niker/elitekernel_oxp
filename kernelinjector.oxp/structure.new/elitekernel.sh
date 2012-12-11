@@ -1,26 +1,24 @@
 #!/system/bin/sh
 
 # EliteKernel: deploy modules and misc files
-sync
-touch /data/local/em_modules_deployed
 mount -o remount,rw /system
-sync
 rm -f /system/lib/modules/*
 cp -fR /modules/*  /system/lib/modules
-sync
 chmod -R 0644 system/lib/modules
+chown 0:0 /system/lib/modules/scsi_wait_scan.ko
 chown 0:0 /system/lib/modules/bcmdhd.ko
 chown 0:0 /system/lib/modules/baseband_xmm_power2.ko
 chown 0:0 /system/lib/modules/raw_ip_net.ko
 chown 0:0 /system/lib/modules/baseband_usb_chr.ko
 chown 0:0 /system/lib/modules/cdc_acm.ko
+sync
 insmod /system/lib/modules/bcmdhd.ko
 insmod /system/lib/modules/baseband_xmm_power2.ko
 insmod /system/lib/modules/raw_ip_net.ko
 insmod /system/lib/modules/baseband_usb_chr.ko
 insmod /system/lib/modules/cdc_acm.ko
-sync
 mount -o remount,ro /system
+touch /data/local/em_modules_deployed
 
 # run EliteKernel tweaks (overrides ROM tweaks)
 echo "sio" > /sys/block/mmcblk0/queue/scheduler
@@ -28,6 +26,8 @@ echo "sio" > /sys/block/mmcblk1/queue/scheduler
 
 # need to enable all CPU cores in order to set them up
 echo 4 > /sys/power/pnpmgr/hotplug/min_on_cpus
+# this needs to be applied, wait for a bit
+sleep 3 
 
 # set governors
 echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
@@ -51,6 +51,7 @@ sync
 echo 0 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
 # set ondemand prefs
+echo "80" > /sys/devices/system/cpu/cpufreq/ondemand/up_threshold
 echo "15" > /sys/devices/system/cpu/cpufreq/ondemand/down_differential
 echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/ignore_nice_load
 echo "3000000" > /sys/devices/system/cpu/cpufreq/ondemand/input_boost_duration
@@ -65,7 +66,6 @@ echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_dynamic
 echo "340000" > /sys/devices/system/cpu/cpufreq/ondemand/two_phase_freq
 echo "3" > /sys/devices/system/cpu/cpufreq/ondemand/ui_counter
 echo "20000" > /sys/devices/system/cpu/cpufreq/ondemand/ui_sampling_rate
-echo "40" > /sys/devices/system/cpu/cpufreq/ondemand/ui_threshold
 echo "66" > /sys/devices/system/cpu/cpufreq/ondemand/ux_boost_threshold
 echo "760000" > /sys/devices/system/cpu/cpufreq/ondemand/ux_freq
 echo "20" > /sys/devices/system/cpu/cpufreq/ondemand/ux_loading
