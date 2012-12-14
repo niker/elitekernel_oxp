@@ -11,14 +11,20 @@ chown 0:0 /system/lib/modules/baseband_xmm_power2.ko
 chown 0:0 /system/lib/modules/raw_ip_net.ko
 chown 0:0 /system/lib/modules/baseband_usb_chr.ko
 chown 0:0 /system/lib/modules/cdc_acm.ko
+
+# make sure init.d is ok
+chgrp -R 2000 /system/etc/init.d
+chmod -R 777 /system/etc/init.d
 sync
+
+# force insert modules that are required
 insmod /system/lib/modules/bcmdhd.ko
 insmod /system/lib/modules/baseband_xmm_power2.ko
 insmod /system/lib/modules/raw_ip_net.ko
 insmod /system/lib/modules/baseband_usb_chr.ko
 insmod /system/lib/modules/cdc_acm.ko
-mount -o remount,ro /system
 touch /data/local/em_modules_deployed
+mount -o remount,ro /system
 
 # run EliteKernel tweaks (overrides ROM tweaks)
 echo "sio" > /sys/block/mmcblk0/queue/scheduler

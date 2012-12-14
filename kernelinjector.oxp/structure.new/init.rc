@@ -287,6 +287,7 @@ on boot
     write /proc/sys/vm/dirty_expire_centisecs 200
     write /proc/sys/vm/dirty_background_bytes 1024000
     write /proc/sys/vm/dirty_bytes 10240000
+    write /proc/sys/vm/dirty_background_ratio  5
 
     # Permissions for System Server and daemons.
     chown radio system /sys/android_power/state
@@ -445,10 +446,6 @@ service adbd /sbin/adbd
     class core
     cgroup bg
     disabled
-
-# adbd on at boot in emulator
-on property:ro.kernel.qemu=1
-    start adbd
 
 service sfc /sbin/sfc
     class core
