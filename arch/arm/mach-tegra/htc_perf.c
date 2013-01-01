@@ -60,6 +60,8 @@ DEFINE_MUTEX(poke_mutex);
 
 static struct pm_qos_request_list poke_cpu_req;
 static struct pm_qos_request_list cap_cpu_req;
+static struct pm_qos_request_list powersave_req_cpus;
+#define POWERSAVE_MAX_ONLINE_CPUS 3
 
 struct kobject *htc_perf_kobj;
 
@@ -207,6 +209,7 @@ static ssize_t power_save_store(struct kobject *kobj,
 			pr_info("[htc_perf] restore user_cap");
 			pm_qos_update_request(&cap_cpu_req,
 					(s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
+			pm_qos_update_request(&powersave_req_cpus, (s32)PM_QOS_MAX_ONLINE_CPUS_DEFAULT_VALUE);
 			is_in_power_save = 0;
 			elitekernel_extreme_powersaving = 0;
 			if(elitekernel_audio_perflock == 1)
@@ -222,6 +225,7 @@ static ssize_t power_save_store(struct kobject *kobj,
 			pr_info("[htc_perf] set user_cap");
 			/* enable user cap */
 			pm_qos_update_request(&cap_cpu_req, (s32)powersave_freq);
+			pm_qos_update_request(&powersave_req_cpus, (s32)POWERSAVE_MAX_ONLINE_CPUS);
 			is_in_power_save = 1;
 			elitekernel_extreme_powersaving = 1;
 			if(elitekernel_audio_perflock == 1)
@@ -333,8 +337,13 @@ static int __init htc_perf_init(void)
 	pm_qos_add_request(&cap_cpu_req,
 			PM_QOS_CPU_FREQ_MAX,
 			(s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
+	
+	// control number of cores: init
+	pm_qos_add_request(&powersave_req_cpus, PM_QOS_MAX_ONLINE_CPUS, (s32)PM_QOS_MAX_ONLINE_CPUS_DEFAULT_VALUE);
 
-        if (!htc_perf_kobj)
+
+
+      if (!htc_perf_kobj)
 		return -ENOMEM;
 
 	return sysfs_create_group(htc_perf_kobj, &attr_group);
