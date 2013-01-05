@@ -182,6 +182,10 @@ struct cpufreq_governor {
 	struct module		*owner;
 };
 
+extern unsigned int cpufreq_suspended;
+extern void cpufreq_pre_suspend();
+extern void cpufreq_post_suspend();
+
 /*
  * Pass a target to the cpufreq driver.
  */

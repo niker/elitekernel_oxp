@@ -46,6 +46,10 @@ static DEFINE_PER_CPU(char[CPUFREQ_NAME_LEN], cpufreq_cpu_governor);
 #endif
 static DEFINE_SPINLOCK(cpufreq_driver_lock);
 
+// EM: remember last max freq before unplug
+static unsigned int cpufreq_last_scaling_max[128];
+//unsigned int cpufreq_suspended = 0;
+
 /*
  * cpu_policy_rwsem is a per CPU reader-writer semaphore designed to cure
  * all cpufreq/hotplug/workqueue/etc related lock issues.
@@ -176,6 +180,8 @@ void cpufreq_cpu_put(struct cpufreq_policy *data)
 	module_put(cpufreq_driver->owner);
 }
 EXPORT_SYMBOL_GPL(cpufreq_cpu_put);
+
+
 
 
 /*********************************************************************
@@ -870,6 +876,14 @@ static int cpufreq_add_dev_interface(unsigned int cpu,
 	policy->user_policy.policy = policy->policy;
 	policy->user_policy.governor = policy->governor;
 
+	// EM: restore last known max scaling freq for this cpu
+	if(cpufreq_last_scaling_max[cpu] > 0)
+	{
+		policy->max = cpufreq_last_scaling_max[cpu];
+	}
+	cpufreq_post_suspend();
+
+
 	if (ret) {
 		pr_debug("setting policy failed\n");
 		if (cpufreq_driver->exit)
@@ -1073,6 +1087,10 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 	strncpy(per_cpu(cpufreq_cpu_governor, cpu), data->governor->name,
 			CPUFREQ_NAME_LEN);
 #endif
+
+	// EM: remember last max scaling freq
+	//if(cpufreq_suspended == 0)
+	cpufreq_last_scaling_max[cpu] = data->max;
 
 	/* if we have other CPUs still registered, we need to unlink them,
 	 * or else wait_for_completion below will lock up. Clean the
@@ -1455,6 +1473,39 @@ int cpufreq_unregister_notifier(struct notifier_block *nb, unsigned int list)
 }
 EXPORT_SYMBOL(cpufreq_unregister_notifier);
 
+// EM: call this before suspend
+void cpufreq_pre_suspend()
+{
+	/*int cpu;
+	cpufreq_suspended = 1;
+
+	for_each_online_cpu(cpu) {
+		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
+		if (policy) {
+			cpufreq_last_scaling_max[cpu] = policy->max;
+		}
+	}*/
+}
+
+// EM: call this after suspend
+void cpufreq_post_suspend()
+{
+	/*int cpu;
+	cpufreq_suspended = 0;
+
+	for_each_online_cpu(cpu) {
+		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
+		if (policy) {
+			if(cpufreq_last_scaling_max[cpu] > 0)
+			{
+				policy->max = cpufreq_last_scaling_max[cpu];
+				cpufreq_update_policy(policy->cpu);
+				cpufreq_cpu_put(policy);
+			}
+		}
+	}*/
+}
+
 
 /*********************************************************************
  *                              GOVERNORS                            *
@@ -1671,6 +1722,7 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 	/* clamp the new policy to PM QoS limits */
 	policy->min = max(pmin, qmin);
 	policy->max = min(pmax, qmax);
+	
 
 	memcpy(&policy->cpuinfo, &data->cpuinfo,
 				sizeof(struct cpufreq_cpuinfo));

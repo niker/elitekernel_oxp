@@ -5,12 +5,7 @@ mount -o remount,rw /system
 rm -f /system/lib/modules/*
 cp -fR /modules/*  /system/lib/modules
 chmod -R 0644 system/lib/modules
-chown 0:0 /system/lib/modules/scsi_wait_scan.ko
-chown 0:0 /system/lib/modules/bcmdhd.ko
-chown 0:0 /system/lib/modules/baseband_xmm_power2.ko
-chown 0:0 /system/lib/modules/raw_ip_net.ko
-chown 0:0 /system/lib/modules/baseband_usb_chr.ko
-chown 0:0 /system/lib/modules/cdc_acm.ko
+find /system/lib/modules -type f -name '*.ko' -exec chown 0:0 {} \;
 
 # make sure init.d is ok
 chgrp -R 2000 /system/etc/init.d
@@ -32,6 +27,7 @@ echo "sio" > /sys/block/mmcblk1/queue/scheduler
 
 # need to enable all CPU cores in order to set them up
 echo 4 > /sys/power/pnpmgr/hotplug/min_on_cpus
+sync
 # this needs to be applied, wait for a bit
 sleep 3 
 
@@ -52,8 +48,8 @@ echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
-sync
 # reset core activation to default
+sleep 2 
 echo 0 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
 # set ondemand prefs
@@ -105,8 +101,11 @@ mount -o async,remount,noatime,nodiratime,delalloc,noauto_da_alloc,barrier=0,nob
 echo "2048" > /sys/block/mmcblk0/bdi/read_ahead_kb;
 echo "2048" > /sys/block/mmcblk0/queue/read_ahead_kb;
 
+# feed urandom data to /dev/random to avoid system blocking (potential security risk, use at own peril!)
+/elitekernel/rngd --rng-device=/dev/urandom --random-device=/dev/random --background --feed-interval=30
+
 # activate delayed config to override ROM
-/system/xbin/busybox nohup /system/bin/sh /elitekernel_delayed.sh 2>&1 >/dev/null &
+/system/xbin/busybox nohup /system/bin/sh /elitekernel/elitekernel_delayed.sh 2>&1 >/dev/null &
 
 
 

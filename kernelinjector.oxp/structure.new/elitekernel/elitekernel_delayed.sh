@@ -4,6 +4,7 @@ sleep 60 # do the configuration again to override ROM and tegra hardcoded stuff
 
 # need to enable all CPU cores in order to set them up
 echo 4 > /sys/power/pnpmgr/hotplug/min_on_cpus
+sync
 # this needs to be applied, wait for a bit
 sleep 3 
 
@@ -24,8 +25,8 @@ echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
-sync
 # reset core activation to default
+sleep 2 
 echo 0 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
 # set ondemand prefs again

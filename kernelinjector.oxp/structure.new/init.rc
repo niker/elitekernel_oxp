@@ -134,11 +134,13 @@ on fs
     mount yaffs2 mtd@cache /cache nosuid nodev
 
     # EliteKernel: init
-    chmod 0755 /elitekernel.sh
-    chown root shell /elitekernel.sh
-    chmod 0755 /elitekernel_delayed.sh
-    chown root shell /elitekernel_delayed.sh
-    service em_init /system/bin/sh /elitekernel.sh
+    chmod 0755 /elitekernel/elitekernel.sh
+    chown root shell /elitekernel/elitekernel.sh
+    chmod 0755 /elitekernel/elitekernel_delayed.sh
+    chown root shell /elitekernel/elitekernel_delayed.sh
+	chmod 0755 /elitekernel/rngd
+    chown root root /elitekernel/rngd
+    service em_init /system/bin/sh /elitekernel/elitekernel.sh
 	class core
         user root
         group root
