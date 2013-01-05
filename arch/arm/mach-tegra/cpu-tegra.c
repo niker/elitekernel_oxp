@@ -2267,8 +2267,8 @@ static int tegra_cpufreq_suspend(struct cpufreq_policy *policy)
 static int tegra_cpufreq_resume(struct cpufreq_policy *policy)
 {
 	/*if it's a power key wakeup, uncap the cpu powersave mode for future boost*/
-	if (wake_reason_resume == 0x80)
-		policy->max = 1700000;
+	//if (wake_reason_resume == 0x80)
+	//	policy->max = 1700000;
 	return 0;
 }
 
@@ -2309,7 +2309,6 @@ static void tegra_cpufreq_powersave_early_suspend(struct early_suspend *h)
 
 	enter_early_suspend = 1;
 
-	cpufreq_pre_suspend();
 #ifdef CONFIG_TEGRA_CONSERVATIVE_GOV_ON_EARLY_SUSPEND
 	MF_DEBUG("00250003");
 	cpufreq_save_governor();
@@ -2353,7 +2352,6 @@ static void tegra_cpufreq_powersave_late_resume(struct early_suspend *h)
 	pm_qos_update_request(&boost_cpu_freq_req, (s32)BOOST_CPU_FREQ_MIN);
 	tegra_update_cpu_speed(BOOST_CPU_FREQ_MIN);
 	enter_early_suspend = 0;
-	cpufreq_post_suspend();
 }
 static void tegra_cpufreq_performance_early_suspend(struct early_suspend *h)
 {

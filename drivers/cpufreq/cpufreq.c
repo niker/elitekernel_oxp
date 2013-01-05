@@ -48,7 +48,7 @@ static DEFINE_SPINLOCK(cpufreq_driver_lock);
 
 // EM: remember last max freq before unplug
 static unsigned int cpufreq_last_scaling_max[128];
-//unsigned int cpufreq_suspended = 0;
+unsigned int cpufreq_suspended = 0;
 
 /*
  * cpu_policy_rwsem is a per CPU reader-writer semaphore designed to cure
@@ -881,7 +881,6 @@ static int cpufreq_add_dev_interface(unsigned int cpu,
 	{
 		policy->max = cpufreq_last_scaling_max[cpu];
 	}
-	cpufreq_post_suspend();
 
 
 	if (ret) {
@@ -1090,7 +1089,7 @@ static int __cpufreq_remove_dev(struct sys_device *sys_dev)
 
 	// EM: remember last max scaling freq
 	//if(cpufreq_suspended == 0)
-	cpufreq_last_scaling_max[cpu] = data->max;
+		//cpufreq_last_scaling_max[cpu] = data->max;
 
 	/* if we have other CPUs still registered, we need to unlink them,
 	 * or else wait_for_completion below will lock up. Clean the
@@ -1477,21 +1476,26 @@ EXPORT_SYMBOL(cpufreq_unregister_notifier);
 void cpufreq_pre_suspend()
 {
 	/*int cpu;
-	cpufreq_suspended = 1;
-
-	for_each_online_cpu(cpu) {
-		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
-		if (policy) {
-			cpufreq_last_scaling_max[cpu] = policy->max;
+	if(cpufreq_suspended == 0)
+	{
+		for_each_online_cpu(cpu) {
+			struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
+			if (policy) {
+				cpufreq_last_scaling_max[cpu] = policy->max;
+			}
 		}
-	}*/
+	}
+	cpufreq_suspended++;
+	*/
 }
 
 // EM: call this after suspend
 void cpufreq_post_suspend()
 {
-	/*int cpu;
-	cpufreq_suspended = 0;
+/*
+	int cpu;
+	if(cpufreq_suspended > 0)
+		cpufreq_suspended--;
 
 	for_each_online_cpu(cpu) {
 		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
@@ -1499,9 +1503,9 @@ void cpufreq_post_suspend()
 			if(cpufreq_last_scaling_max[cpu] > 0)
 			{
 				policy->max = cpufreq_last_scaling_max[cpu];
-				cpufreq_update_policy(policy->cpu);
-				cpufreq_cpu_put(policy);
 			}
+			cpufreq_update_policy(policy->cpu);
+			cpufreq_cpu_put(policy);
 		}
 	}*/
 }
@@ -2093,6 +2097,25 @@ static int __init cpufreq_core_init(void)
 	for_each_possible_cpu(cpu) {
 		per_cpu(cpufreq_policy_cpu, cpu) = -1;
 		init_rwsem(&per_cpu(cpu_policy_rwsem, cpu));
+
+		// EM: hardcode per-core default CPU freq 
+		// (tegra early suspend is not using policy but directly scaling freq)
+		if(cpu == 0)
+		{
+			cpufreq_last_scaling_max[cpu] = 1400000;
+		}
+		if(cpu == 1)
+		{
+			cpufreq_last_scaling_max[cpu] = 1700000;
+		}
+		if(cpu == 2)
+		{
+			cpufreq_last_scaling_max[cpu] = 1600000;
+		}
+		if(cpu == 3)
+		{
+			cpufreq_last_scaling_max[cpu] = 1500000;
+		}
 	}
 
 	cpufreq_global_kobject = kobject_create_and_add("cpufreq",

@@ -27,9 +27,7 @@ echo "sio" > /sys/block/mmcblk1/queue/scheduler
 
 # need to enable all CPU cores in order to set them up
 echo 4 > /sys/power/pnpmgr/hotplug/min_on_cpus
-sync
-# this needs to be applied, wait for a bit
-sleep 3 
+sleep 2
 
 # set governors
 echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
@@ -38,10 +36,10 @@ echo "ondemand" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
 echo "ondemand" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
 
 # set default speeds (cpus activate in order 0-3-2-1)
-echo "1300000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-echo "1600000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
-echo "1500000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
-echo "1400000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+echo "1400000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+echo "1700000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+echo "1600000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
+echo "1500000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
 echo "51000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
@@ -49,7 +47,7 @@ echo "51000" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
 echo "51000" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
 
 # reset core activation to default
-sleep 2 
+sleep 1 
 echo 0 > /sys/power/pnpmgr/hotplug/min_on_cpus
 
 # set ondemand prefs
