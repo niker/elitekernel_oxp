@@ -100,7 +100,7 @@ echo "2048" > /sys/block/mmcblk0/bdi/read_ahead_kb;
 echo "2048" > /sys/block/mmcblk0/queue/read_ahead_kb;
 
 # feed urandom data to /dev/random to avoid system blocking (potential security risk, use at own peril!)
-/elitekernel/rngd --rng-device=/dev/urandom --random-device=/dev/random --background --feed-interval=30
+/elitekernel/rngd --rng-device=/dev/urandom --random-device=/dev/random --background --feed-interval=60
 
 # activate delayed config to override ROM
 /system/xbin/busybox nohup /system/bin/sh /elitekernel/elitekernel_delayed.sh 2>&1 >/dev/null &

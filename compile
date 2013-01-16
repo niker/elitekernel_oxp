@@ -14,6 +14,7 @@ make -j6
 # copy modules
 find drivers -type f -name '*.ko' -exec cp -f {} kernelinjector.oxp/structure.new/modules \;
 find arch -type f -name '*.ko' -exec cp -f {} kernelinjector.oxp/structure.new/modules \;
+find fs -type f -name '*.ko' -exec cp -f {} kernelinjector.oxp/structure.new/modules \;
 
 # copy zImage
 cp -f arch/arm/boot/zImage kernelinjector.oxp/zImage.new/zImage
