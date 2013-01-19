@@ -185,13 +185,15 @@ static void sweep2wake_presspwr(struct work_struct * sweep2wake_presspwr_work) {
         return;
 
 	printk(KERN_INFO "[TP] [sweep2wake]: mode=%d", mode);
-
+	clk_set_rate(cpu_clk, 475000 * 1000);
 	input_event(sweep2wake_pwrdev, EV_KEY, KEY_POWER, 1);
 	input_event(sweep2wake_pwrdev, EV_SYN, 0, 0);
 	msleep(100);
+	clk_set_rate(cpu_clk, 475000 * 1000);
 	input_event(sweep2wake_pwrdev, EV_KEY, KEY_POWER, 0);
 	input_event(sweep2wake_pwrdev, EV_SYN, 0, 0);
 	msleep(100);
+	clk_set_rate(cpu_clk, 475000 * 1000);
     mutex_unlock(&pwrkeyworklock);
 }
 
@@ -3490,12 +3492,13 @@ static int synaptics_ts_resume(struct i2c_client *client)
 		 * - THIS IS NEEDED for certain devices!!! --
 		 *
 		 */
+		clk_set_rate(cpu_clk, 475000 * 1000);
 		ret = i2c_syn_write_byte_data(client,
 			get_address_base(ts, 0x01, CONTROL_BASE), 0x01);
 		if (ret < 0)
 			i2c_syn_error_handler(ts, 1, "sleep", __func__);
-		clk_set_rate(cpu_clk, 475000 * 1000);
 		msleep(150);
+		clk_set_rate(cpu_clk, 475000 * 1000);
 		ret = 0;
 		//screen on, disable_irq_wake
 		disable_irq_wake(client->irq);
@@ -3508,7 +3511,9 @@ static int synaptics_ts_resume(struct i2c_client *client)
 #ifdef SYN_SUSPEND_RESUME_POWEROFF
 	if (ts->power) {
 		ts->power(1);
+		clk_set_rate(cpu_clk, 475000 * 1000);
 		msleep(100);
+		clk_set_rate(cpu_clk, 475000 * 1000);
 #ifdef SYN_CABLE_CONTROL
 		if (ts->cable_support) {
 			if (usb_get_connect_type())
